@@ -1,3 +1,13 @@
+# What's this
+
+It's a buggy and probably incomplete fork of servant-elm, where I
+(@k-bx): ported it to elm-bridge instead of elm-export to get Elm 0.19
+support.
+
+See https://github.com/k-bx/servant-elm-generically for a working example
+
+Original README follows:
+
 # Servant Elm
 
 [![Build Status](https://travis-ci.org/mattjbray/servant-elm.svg?branch=master)](https://travis-ci.org/mattjbray/servant-elm)
