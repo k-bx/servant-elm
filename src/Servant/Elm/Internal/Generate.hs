@@ -305,11 +305,12 @@ mkArgs opts request =
 mkLetParams :: ElmOptions -> F.Req EType -> Maybe Doc
 mkLetParams opts request =
   if null (request ^. F.reqUrl . F.queryStr) then
-    Nothing
+    Just "params = []"
   else
     Just $ "params =" <$>
-           indent i ("List.filter (not << String.isEmpty)" <$>
-                      indent i (elmList params))
+           -- indent i ("List.filter (not << String.isEmpty)" <$>
+           --            indent i (elmList params))
+           indent i ("List.concat " <> elmList params)
   where
     params :: [Doc]
     params = map paramToDoc (request ^. F.reqUrl . F.queryStr)
@@ -341,8 +342,9 @@ mkLetParams opts request =
 
         F.List ->
             elmName <$>
-            indent 4 ("|> List.map" <+> parens (backslash <> "val ->" <+> dquotes (name <> "[]=") <+> "++ (val |> toString |> Http.encodeUri)") <$>
-                      "|> String.join" <+> dquotes "&")
+            indent 4 ("|> List.map" <+> parens (backslash <> "val -> Url.Builder.string " <> dquotes name <> " (String.fromInt val)"))
+            -- indent 4 ("|> List.map" <+> parens (backslash <> "val ->" <+> dquotes (name <> "[]=") <+> "++ (val |> toString |> Http.encodeUri)") <$>
+            --           "|> String.join" <+> dquotes "&")
       where
         elmName = elmQueryArg qarg
         name = qarg ^. F.queryArgName . F.argName . to (stext . F.unPathSegment)
@@ -415,7 +417,7 @@ renderDecoderName :: EType -> Doc
 renderDecoderName elmTypeExpr =
   case elmTypeExpr of
     ETyApp (ETyCon (ETCon "List")) t ->
-      parens ("Json.Decode.list " <> renderDecoderName t)
+      parens ("Json.Decode.list " <> parens (renderDecoderName t))
     _ -> ("jsonDec" <> stext (T.pack (renderElm elmTypeExpr)))
 
 
@@ -423,11 +425,8 @@ mkUrl :: ElmOptions -> [F.Segment EType] -> Doc
 mkUrl opts segments =
   ("Url.Builder.absolute" <$>
    (indent i . elmList)
-     ((case urlPrefix opts of
-         Dynamic -> "urlBase"
-         Static url -> dquotes (stext url)) :
-      map segmentToDoc segments)) <+>
-  "[]"
+     (map segmentToDoc segments)) <+>
+  "params"
   where
     segmentToDoc :: F.Segment EType -> Doc
     segmentToDoc s =
@@ -451,10 +450,11 @@ mkQueryParams request =
   if null (request ^. F.reqUrl . F.queryStr) then
     empty
   else
-    line <> "++" <+> align ("if List.isEmpty params then" <$>
-                            indent i (dquotes empty) <$>
-                            "else" <$>
-                            indent i (dquotes "?" <+> "++ String.join" <+> dquotes "&" <+> "params"))
+    line
+    -- line <> "++" <+> align ("if List.isEmpty params then" <$>
+    --                         indent i (dquotes empty) <$>
+    --                         "else" <$>
+    --                         indent i (dquotes "?" <+> "++ String.join" <+> dquotes "&" <+> "params"))
 
 
 {- | Determines whether we construct an Elm function that expects an empty
