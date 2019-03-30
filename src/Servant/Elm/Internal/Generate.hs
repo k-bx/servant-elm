@@ -331,8 +331,10 @@ mkLetParams opts request =
                 "toString >> "
           in
               (if wrapped then elmName else "Just" <+> elmName) <$>
-              indent 4 ("|> Maybe.map" <+> parens (toStringSrc <> "Http.encodeUri >> (++)" <+> dquotes (name <> equals)) <$>
-                        "|> Maybe.withDefault" <+> dquotes empty)
+              indent 4 ("|> Maybe.map" <+> parens (toStringSrc <> "Url.Builder.string " <+> dquotes name) <$>
+                        "|> (\\mx -> case mx of" <$>
+                            indent 4 ("Nothing -> []") <$>
+                            indent 4 ("Just x -> [x])"))
 
         F.Flag ->
             "if" <+> elmName <+> "then" <$>
