@@ -1,3 +1,8 @@
+0.6.0.0
+-------
+
+* PR #49. Migrate to elm-bridge and http 2.0.0
+
 0.5.0.0
 -------
 * Fix generation for APIs with response headers.
